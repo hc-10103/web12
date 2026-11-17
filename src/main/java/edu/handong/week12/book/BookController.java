@@ -1,5 +1,7 @@
 package edu.handong.week12.book;
 
+import edu.handong.week12.book.DTO.BookRequest;
+import edu.handong.week12.book.DTO.BookResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,27 +16,31 @@ public class BookController {
     }
 
     @GetMapping
-    public List<Book> list() {
-        return service.findAll();
+    public List<BookResponse> list() {
+        return service.findAll().stream().map(BookResponse::from).toList();
     } // TODO: Pageable
 
     @GetMapping("/{id}")
-    public Book get(@PathVariable Long id) {
-        return service.findById(id);
+    public BookResponse get(@PathVariable Long id) {
+        return BookResponse.from(service.findById(id));
     }
 
     @PostMapping
-    public Book create(@RequestBody Book input) {
-        return service.create(input);
+    public BookResponse create(@RequestBody BookRequest input) {
+        return BookResponse.from(service.create(toBook(input)));
     } // TODO: @Valid, ResponseEntity 201
 
     @PutMapping("/{id}")
-    public Book update(@PathVariable Long id, @RequestBody Book input) {
-        return service.update(id, input);
+    public BookResponse update(@PathVariable Long id, @RequestBody BookRequest input) {
+        return BookResponse.from(service.update(id, toBook(input)));
     }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         service.delete(id);
     } // TODO: 204
+
+    private Book toBook(BookRequest input) {
+        return new Book(input.title(), input.author(), input.price());
+    }
 }
