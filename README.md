@@ -26,7 +26,7 @@ IntelliJ에서 Week12Application의 main()을 실행하거나 ./gradlew bootRun�
 
 API 주소는 http://localhost:3000/api/books 이고, Swagger는 http://localhost:3000/swagger-ui.html 에서 볼 수 있다.
 
-## API
+### API 목록
 
 GET /api/books?page=0&size=5&sort=price,desc : 책 목록 조회, 200
 
@@ -112,46 +112,85 @@ BookRequest에는 id가 없어서 사용자가 id를 보내도 무시된다. Boo
 
 빈 제목이나 음수 가격을 보내면 변경 전에는 그대로 저장됐는데, 변경 후에는 400과 함께 어떤 값이 틀렸는지 알려준다.
 
-## 테스트 결과
+## 새로 추가한 기능
 
-로컬 서버를 수업 MariaDB에 연결해서 테스트했다.
+### Validation
 
-### 1. 초기 Sample CRUD 테스트
+BookRequest에 @NotBlank, @NotNull, @Min(0)을 붙여서 제목이나 저자가 비어 있거나 가격이 없거나 음수면 저장되지 않게 했다. Controller의 create(), update()에 @Valid를 붙여서 메서드가 실행되기 전에 검사한다.
+
+### 공통 예외 처리
+
+GlobalExceptionHandler에서 예외를 한곳에서 처리한다. 없는 id는 404, 입력값이 틀리거나 JSON 형식이 깨지면 400으로 응답한다. 오류 응답은 code, message, status, fields, timestamp 형식으로 통일했고, fields에는 어떤 값이 틀렸는지 들어간다.
+
+### Pagination / Sorting
+
+목록 조회에 Pageable을 적용해서 page, size, sort 값으로 원하는 만큼 정렬해서 가져올 수 있다. 값을 안 보내면 5개씩 id 순으로 나온다. 응답에는 책 목록과 함께 전체 개수, 전체 페이지 수가 들어 있다.
+
+### Swagger
+
+springdoc을 추가해서 /swagger-ui.html에서 API 목록을 보고 바로 테스트할 수 있다. @Tag와 @Operation으로 API마다 설명을 달았다.
+
+## 테스트 및 배포
+
+### 로컬 테스트
+#### 1. 초기 Sample CRUD 테스트
 
 ![초기 Sample CRUD 테스트](results/01_sample.png)
 
-### 2. DTO 적용 후 POST 성공 (201)
+#### 2. DTO 적용 후 POST 성공 (201)
 
 요청에 id를 넣어도 무시되고 새 id로 저장된다.
 
 ![DTO 적용 후 POST 성공](results/02_dto_created.png)
 
-### 3. 잘못된 입력 요청 (400)
+#### 3. 잘못된 입력 요청 (400)
 
 빈 제목, 음수 가격, 가격 누락, 깨진 JSON을 보내면 400이 나온다.
 
 ![잘못된 입력 요청](results/03_validation.png)
 
-### 4. 존재하지 않는 ID (404)
+#### 4. 존재하지 않는 ID (404)
 
 없는 id로 조회, 수정, 삭제하면 404가 나온다.
 
 ![존재하지 않는 ID](results/04_not_found.png)
 
-### 5. 페이지/정렬 적용 결과
+#### 5. 페이지/정렬 적용 결과
 
 가격이 높은 순으로 5개씩 나눠서 나온다.
 
 ![페이지 정렬 결과](results/05_pagination.png)
 
-### 6. Swagger UI/API 테스트
+#### 6. Swagger UI/API 테스트
 
 Swagger 화면에서 책 등록을 직접 실행해서 201이 나오는 것을 확인했다.
 
 ![Swagger UI](results/06_swagger.png)
 
-### 7. 기존 CRUD 정상 동작 확인
+#### 7. 기존 CRUD 정상 동작 확인
 
 조회, 수정, 삭제가 잘 되고, 삭제한 뒤 다시 조회하면 404가 나온다.
 
 ![기존 CRUD 확인](results/07_crud.png)
+
+### Render 배포
+
+render : https://web12-glf0.onrender.com
+
+Swagger 화면 : https://web12-glf0.onrender.com/swagger-ui.html
+
+## Weekly Review
+
+### 새롭게 배운 내용 3가지
+
+1. Entity를 그대로 요청과 응답에 쓰면 안 되고 DTO로 나눠야 한다는 것을 배웠다. 요청에 id를 넣었더니 에러가 나는 걸 보고 이유를 알게 됐다.
+2. @Valid와 @RestControllerAdvice를 쓰면 입력값 검사와 에러 처리를 Controller마다 하지 않고 한곳에서 할 수 있다는 것을 배웠다.
+3. Pageable을 쓰면 페이지 나누기와 정렬을 직접 구현하지 않아도 되고, Swagger를 쓰면 API 문서와 테스트 화면이 자동으로 만들어진다는 것을 배웠다.
+
+### 어려웠던 점과 해결 방법
+처음에는 Entity로 바로 받아도 문제없다고 생각했는데, 요청에 id를 같이 보내니 500 에러가 났다. 
+JPA가 id가 있으면 이미 있는 데이터로 보고 수정하려고 해서 생긴 문제였고, id가 없는 BookRequest로 받도록 바꿔서 해결했다.
+
+### AI 사용
+코드 구조를 분석하고 기능을 추가할 때 도움을 받았다. 
+설명을 바로 들을 수 있어서 편했지만, 결과를 그대로 쓰기보다 직접 실행해 보고 왜 그렇게 동작하는지 이해하려고 노력했다.
