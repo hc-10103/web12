@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BookNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(BookNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponse.of(404, "Not Found", e.getMessage(), Map.of()));
+                .body(ErrorResponse.of("BOOK_NOT_FOUND", e.getMessage(), 404, Map.of()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -26,12 +26,12 @@ public class GlobalExceptionHandler {
         e.getBindingResult().getFieldErrors()
                 .forEach(err -> fields.putIfAbsent(err.getField(), err.getDefaultMessage()));
         return ResponseEntity.badRequest()
-                .body(ErrorResponse.of(400, "Bad Request", "입력값이 올바르지 않습니다.", fields));
+                .body(ErrorResponse.of("VALIDATION_FAILED", "입력값이 올바르지 않습니다.", 400, fields));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleBadJson(HttpMessageNotReadableException e) {
         return ResponseEntity.badRequest()
-                .body(ErrorResponse.of(400, "Bad Request", "요청 본문(JSON) 형식이 올바르지 않습니다.", Map.of()));
+                .body(ErrorResponse.of("INVALID_JSON", "요청 본문(JSON) 형식이 올바르지 않습니다.", 400, Map.of()));
     }
 }
