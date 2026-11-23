@@ -100,3 +100,48 @@ DELETE /api/books/{id}
 - BookController.create() — @Valid 검증, DTO 변환, ResponseEntity로 201 응답
 - BookService.findById() — Repository 조회, Optional 처리, 없으면 404 예외
 - BookController.list() — Pageable로 페이지 요청, Page<Book>을 BookResponse로 변환
+
+## DTO & HTTP Response 리팩터링
+
+### 변경 내용
+1. Controller가 `Book` Entity 대신 `BookRequest`로 요청을 받고 `BookResponse`로 응답하도록 바꿨다. 요청 DTO를 Entity로 바꾸는 건 `toBook()`에서 한다.
+2. `BookRequest`에는 title, author, price만 있다. id 필드가 없어서 클라이언트가 id를 보내도 무시된다.
+3. `BookResponse`에는 id, title, author, price만 담아서 응답한다. Entity를 그대로 내보내지 않는다.
+4. `create()`, `get()`, `update()`, `delete()`는 `ResponseEntity`로 바꿔서 상태코드를 직접 정했다. POST는 201, GET과 PUT은 200, DELETE는 204다. `list()`는 `Page<BookResponse>`를 그대로 반환하고 기본값인 200이 나간다.
+
+### 변경 전/후 비교
+같은 요청을 변경 전 코드(처음 받은 샘플)와 변경 후 코드에 보내서 비교했다.
+
+| 요청 | 변경 전 | 변경 후 |
+|---|---|---|
+| `POST /api/books` | 200, Book Entity 응답 | **201**, BookResponse 응답 + Location 헤더 |
+| `POST` 에 `"id":999` 포함 | **500 에러** | 201, id는 무시되고 새 id로 저장 |
+| `GET /api/books` | 200, Entity 배열 | 200, 페이지 형식(content, page) |
+| `GET /api/books/{id}` | 200 | 200 |
+| `PUT /api/books/{id}` | 200 | 200 |
+| `DELETE /api/books/{id}` | 200 (빈 응답) | **204** No Content |
+| 없는 id 조회 | 500 에러 | 404 + 에러 메시지 |
+| 빈 제목, 음수 가격 | 200, 그대로 저장됨 | 400 + 어떤 값이 틀렸는지 표시 |
+
+#### 요청에 id를 넣었을 때
+```
+POST /api/books
+{"id":999,"title":"Clean Code","author":"Martin","price":33000}
+```
+변경 전에는 Entity로 바로 받아서 id 999가 그대로 들어갔다. id가 null이 아니니까 `save()`가 새 데이터가 아니라 이미 있는 데이터라고 판단해서 merge를 했다. 근데 DB에 999번이 없어서 StaleObjectStateException이 나고 500 에러가 됐다.
+```
+500 {"status":500,"error":"Internal Server Error","path":"/api/books"}
+```
+변경 후에는 BookRequest에 id가 없어서 무시되고, DB가 만든 id로 저장된다. (아래 id는 실행할 때마다 다를 수 있다)
+```
+201 Location: http://localhost:3000/api/books/1
+{"id":1,"title":"Clean Code","author":"Martin","price":33000}
+```
+
+#### 삭제
+변경 전에는 삭제해도 200이 나왔는데, 변경 후에는 돌려줄 내용이 없다는 의미로 204가 나온다.
+```
+DELETE /api/books/1
+변경 전: 200 (body 없음)
+변경 후: 204 No Content
+```

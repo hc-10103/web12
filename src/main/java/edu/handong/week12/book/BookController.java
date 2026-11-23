@@ -32,8 +32,8 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    public BookResponse get(@PathVariable Long id) {
-        return BookResponse.from(service.findById(id));
+    public ResponseEntity<BookResponse> get(@PathVariable Long id) {
+        return ResponseEntity.ok(BookResponse.from(service.findById(id)));
     }
 
     // 새 책을 등록하고 201 Created로 응답한다.
@@ -50,8 +50,8 @@ public class BookController {
     }
 
     @PutMapping("/{id}")
-    public BookResponse update(@PathVariable Long id, @Valid @RequestBody BookRequest input) {
-        return BookResponse.from(service.update(id, toBook(input)));
+    public ResponseEntity<BookResponse> update(@PathVariable Long id, @Valid @RequestBody BookRequest input) {
+        return ResponseEntity.ok(BookResponse.from(service.update(id, toBook(input))));
     }
 
     @DeleteMapping("/{id}")
