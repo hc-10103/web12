@@ -1,0 +1,73 @@
+<!doctype html><meta charset=utf-8><title>Week12 API Test</title>
+<style>
+body{font:14px -apple-system,sans-serif;background:#f6f7f9;margin:0;padding:24px;color:#1d2330}
+h1{font-size:20px;margin:0 0 4px}.sub{color:#667;margin-bottom:16px}
+section{background:#fff;border:1px solid #dde1e7;border-radius:8px;padding:12px 14px;margin-bottom:12px}
+.line{display:flex;gap:10px;align-items:center}.m{font-weight:700;padding:2px 8px;border-radius:4px;color:#fff;font-size:12px}
+.GET{background:#2b8a3e}.POST{background:#d9480f}.PUT{background:#1971c2}.DELETE{background:#c92a2a}
+.code{margin-left:auto;color:#2b8a3e;font-weight:700}code{font-size:14px}
+pre{background:#f1f3f5;padding:8px 10px;border-radius:6px;margin:8px 0 0;font-size:12px;white-space:pre-wrap}
+pre.req{background:#fff4e6}
+</style>
+<h1>Week12 Book API — CRUD 테스트 (Customizing 전)</h1>
+<div class=sub>Spring Boot 3.5.7 · Java 17 · JPA · MariaDB (walab.handong.edu) · localhost:3000 · 2026-11-23 14:20</div>
+<section><div class=line><span class="m POST">POST</span><code>/api/books</code><span class=code>200</span></div><pre class=req>{
+    "title": "Clean Code",
+    "author": "Robert C. Martin",
+    "price": 33000
+}</pre><pre>{
+    "id": 3,
+    "title": "Clean Code",
+    "author": "Robert C. Martin",
+    "price": 33000
+}</pre></section><section><div class=line><span class="m POST">POST</span><code>/api/books</code><span class=code>200</span></div><pre class=req>{
+    "title": "Refactoring",
+    "author": "Martin Fowler",
+    "price": 38000
+}</pre><pre>{
+    "id": 4,
+    "title": "Refactoring",
+    "author": "Martin Fowler",
+    "price": 38000
+}</pre></section><section><div class=line><span class="m GET">GET</span><code>/api/books</code><span class=code>200</span></div><pre>[
+    {
+        "id": 2,
+        "title": "Effective Java",
+        "author": "Joshua Bloch",
+        "price": 36000
+    },
+    {
+        "id": 3,
+        "title": "Clean Code",
+        "author": "Robert C. Martin",
+        "price": 33000
+    },
+    {
+        "id": 4,
+        "title": "Refactoring",
+        "author": "Martin Fowler",
+        "price": 38000
+    }
+]</pre></section><section><div class=line><span class="m PUT">PUT</span><code>/api/books/3</code><span class=code>200</span></div><pre class=req>{
+    "title": "Clean Code (2nd Ed.)",
+    "author": "Robert C. Martin",
+    "price": 35000
+}</pre><pre>{
+    "id": 3,
+    "title": "Clean Code (2nd Ed.)",
+    "author": "Robert C. Martin",
+    "price": 35000
+}</pre></section><section><div class=line><span class="m DELETE">DELETE</span><code>/api/books/3</code><span class=code>200</span></div><pre>(empty body)</pre></section><section><div class=line><span class="m GET">GET</span><code>/api/books</code><span class=code>200</span></div><pre>[
+    {
+        "id": 2,
+        "title": "Effective Java",
+        "author": "Joshua Bloch",
+        "price": 36000
+    },
+    {
+        "id": 4,
+        "title": "Refactoring",
+        "author": "Martin Fowler",
+        "price": 38000
+    }
+]</pre></section>
